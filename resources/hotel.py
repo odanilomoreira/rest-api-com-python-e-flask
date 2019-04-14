@@ -29,56 +29,37 @@ class Hoteis(Resource):
         return {'hoteis': hoteis}
 
 class Hotel(Resource):
-    def get(self, hotel_id):
+    atributos = reqparse.RequestParser()
+    atributos.add_argument('nome')
+    atributos.add_argument('estrelas')
+    atributos.add_argument('diaria')
+    atributos.add_argument('cidade')
+
+    def find_hotel(hotel_id):
         for hotel in hoteis:
             if hotel['hotel_id'] == hotel_id:
                 return hotel
+        return False
+
+    def get(self, hotel_id):
+        hotel = Hotel.find_hotel(hotel_id)
+        if hotel:
+            return hotel
         return {'message': 'Hotel not found.'}, 404
 
-        # lista_hotel = [hotel for hotel in hoteis if hotel['hotel_id'] == hotel_id]
-        # if lista_hotel:
-        #     return lista_hotel[0]
-        # return {'message': 'Hotel not found.'}, 404
-
     def post(self, hotel_id):
-        atributos = reqparse.RequestParser()
-        atributos.add_argument('nome')
-        atributos.add_argument('estrelas')
-        atributos.add_argument('diaria')
-        atributos.add_argument('cidade')
-
-        dados = atributos.parse_args()
-
-        novo_hotel = {
-                    'hotel_id': hotel_id,
-                    'nome': dados['nome'],
-                    'estrelas': dados['estrelas'],
-                    'diaria': dados['diaria'],
-                    'cidade': dados['cidade']
-                     }
         hoteis.append(novo_hotel)
         return novo_hotel, 201
 
     def put(self, hotel_id):
-        atributos = reqparse.RequestParser()
-        atributos.add_argument('nome')
-        atributos.add_argument('estrelas')
-        atributos.add_argument('diaria')
-        atributos.add_argument('cidade')
-        dados = atributos.parse_args()
-        novo_hotel = {
-                    'hotel_id': hotel_id,
-                    'nome': dados['nome'],
-                    'estrelas': dados['estrelas'],
-                    'diaria': dados['diaria'],
-                    'cidade': dados['cidade']
-                     }
-                     
-        lista_hotel = [hotel for hotel in hoteis if hotel['hotel_id'] == hotel_id]
-        if not lista_hotel:
-            hoteis.append(novo_hotel)
-            return novo_hotel
-        return lista_hotel[0].update(novo_hotel)
+        dados = Hotel.atributos.parse_args()
+        novo_hotel =    {'hotel_id': hotel_id, **dados}
+        hotel = Hotel.find_hotel(hotel_id)
+        if hotel:
+            hotel.update(novo_hotel)
+            return hotel, 200
+        hoteis.append(novo_hotel)
+        return novo_hotel, 201
 
     def delete(self, hotel_id):
         global hoteis
