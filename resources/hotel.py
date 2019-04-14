@@ -1,4 +1,4 @@
-from flask_restful import Resource
+from flask_restful import Resource, reqparse
 
 hoteis = [
         {
@@ -29,14 +29,58 @@ class Hoteis(Resource):
         return {'hoteis': hoteis}
 
 class Hotel(Resource):
-    def get(self):
-        pass
+    def get(self, hotel_id):
+        for hotel in hoteis:
+            if hotel['hotel_id'] == hotel_id:
+                return hotel
+        return {'message': 'Hotel not found.'}, 404
 
-    def post(self):
-        pass
+        # lista_hotel = [hotel for hotel in hoteis if hotel['hotel_id'] == hotel_id]
+        # if lista_hotel:
+        #     return lista_hotel[0]
+        # return {'message': 'Hotel not found.'}, 404
 
-    def put(self):
-        pass
+    def post(self, hotel_id):
+        atributos = reqparse.RequestParser()
+        atributos.add_argument('nome')
+        atributos.add_argument('estrelas')
+        atributos.add_argument('diaria')
+        atributos.add_argument('cidade')
 
-    def delete(self):
-        pass 
+        dados = atributos.parse_args()
+
+        novo_hotel = {
+                    'hotel_id': hotel_id,
+                    'nome': dados['nome'],
+                    'estrelas': dados['estrelas'],
+                    'diaria': dados['diaria'],
+                    'cidade': dados['cidade']
+                     }
+        hoteis.append(novo_hotel)
+        return novo_hotel, 201
+
+    def put(self, hotel_id):
+        atributos = reqparse.RequestParser()
+        atributos.add_argument('nome')
+        atributos.add_argument('estrelas')
+        atributos.add_argument('diaria')
+        atributos.add_argument('cidade')
+        dados = atributos.parse_args()
+        novo_hotel = {
+                    'hotel_id': hotel_id,
+                    'nome': dados['nome'],
+                    'estrelas': dados['estrelas'],
+                    'diaria': dados['diaria'],
+                    'cidade': dados['cidade']
+                     }
+                     
+        lista_hotel = [hotel for hotel in hoteis if hotel['hotel_id'] == hotel_id]
+        if not lista_hotel:
+            hoteis.append(novo_hotel)
+            return novo_hotel
+        return lista_hotel[0].update(novo_hotel)
+
+    def delete(self, hotel_id):
+        global hoteis
+        hoteis = [hotel for hotel in hoteis if hotel['hotel_id'] != hotel_id]
+        return {'message': 'Item deleted.'}
