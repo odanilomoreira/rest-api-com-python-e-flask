@@ -35,11 +35,6 @@ class Hotel(Resource):
                 return hotel
         return {'message': 'Hotel not found.'}, 404
 
-        # lista_hotel = [hotel for hotel in hoteis if hotel['hotel_id'] == hotel_id]
-        # if lista_hotel:
-        #     return lista_hotel[0]
-        # return {'message': 'Hotel not found.'}, 404
-
     def post(self, hotel_id):
         atributos = reqparse.RequestParser()
         atributos.add_argument('nome')
@@ -73,12 +68,18 @@ class Hotel(Resource):
                     'diaria': dados['diaria'],
                     'cidade': dados['cidade']
                      }
-                     
-        lista_hotel = [hotel for hotel in hoteis if hotel['hotel_id'] == hotel_id]
-        if not lista_hotel:
-            hoteis.append(novo_hotel)
-            return novo_hotel
-        return lista_hotel[0].update(novo_hotel)
+
+        for hotel in hoteis:
+            if hotel['hotel_id'] == hotel_id:
+                hotel_encontrado = hotel
+            else:
+                hotel_encontrado = None
+
+        if hotel_encontrado:
+            hotel_encontrado.update(novo_hotel)
+            return hotel_encontrado
+        hoteis.append(novo_hotel)
+        return novo_hotel
 
     def delete(self, hotel_id):
         global hoteis
