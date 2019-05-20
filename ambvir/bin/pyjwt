@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/home/danilo/Desktop/REST API com Python e Flask/ambvir/bin/python3.7" "$0" "$@"
+'''exec' "/home/danilo/Desktop/REST API com Python e Flask/ambvir/bin/python" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re
