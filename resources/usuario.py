@@ -3,10 +3,13 @@ from models.usuario import UserModel
 from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
 from werkzeug.security import safe_str_cmp
 from blacklist import BLACKLIST
+import traceback
+from flask import make_response, render_template
 
 atributos = reqparse.RequestParser()
 atributos.add_argument('login', type=str, required=True, help="The field 'login' cannot be left blank.")
 atributos.add_argument('senha', type=str, required=True, help="The field 'senha' cannot be left blank.")
+atributos.add_argument('email', type=str)
 atributos.add_argument('ativado', type=bool)
 
 class User(Resource):
@@ -29,13 +32,24 @@ class UserRegister(Resource):
     # /cadastro
     def post(self):
         dados = atributos.parse_args()
+        if not dados.get('email') or dados.get('email') is None:
+            return {"message": "The field 'email' cannot be left blank."}, 400
+
+        if UserModel.find_by_email(dados['email']):
+            return {"message": "The email '{}' already exists.".format(dados['email'])}, 400
 
         if UserModel.find_by_login(dados['login']):
             return {"message": "The login '{}' already exists.".format(dados['login'])}, 400 #Bad Request
 
         user = UserModel(**dados)
         user.ativado = False
-        user.save_user()
+        try:
+            user.save_user()
+            user.send_confirmation_email()
+        except:
+            user.delete_user()
+            traceback.print_exc()
+            return {'message': 'An internal server error has ocurred.'}, 500
         return {'message': 'User created successfully!'}, 201 # Created
 
 class UserLogin(Resource):
@@ -73,4 +87,6 @@ class UserConfirm(Resource):
 
         user.ativado = True
         user.save_user()
-        return {"message": "User id '{}' confirmed successfully.".format(user_id)}, 200
+        # return {"message": "User id '{}' confirmed successfully.".format(user_id)}, 200
+        headers = {'Content-Type': 'text/html'}
+        return make_response(render_template('user_confirm.html', email=user.email, usuario=user.login), 200, headers)
